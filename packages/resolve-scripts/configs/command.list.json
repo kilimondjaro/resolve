@@ -4,6 +4,5 @@
   "start": "Runs the app from the build directory",
   "testFunctional": "Runs functional tests with TestCafe",
   "test": "Runs unit tests with Jest",
-  "pack": "Pack client app",
-  "up": "Deploy package to the server"
+  "pack": "Pack client app"
 }

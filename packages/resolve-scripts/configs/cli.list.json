@@ -58,5 +58,9 @@
   "printConfig": {
     "describe": "Print the full configuration",
     "type": "boolean"
+  },
+  "cloud": {
+    "describe": "Build source files for cloud",
+    "type": "boolean"
   }
 }

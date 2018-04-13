@@ -1,5 +1,4 @@
-import fs from 'fs'
-import fse from 'fs-extra'
+import fs from 'fs-extra'
 import path from 'path'
 import archiver from 'archiver'
 import { execSync } from 'child_process'
@@ -23,17 +22,21 @@ const excludeDirs = [
   '__mocks__',
   '.git',
   'tests',
+  'test',
   'dist',
+  'common',
   'node_modules'
 ]
 
-const DEPLOY_DIR = '.package'
+const regexp = /.*\.db/
+
+const PKG_DIR = '.package'
 
 const createDeployDir = () => {
-  if (fs.existsSync(DEPLOY_DIR)) {
-    fse.removeSync(DEPLOY_DIR)
+  if (fs.existsSync(PKG_DIR)) {
+    fs.removeSync(PKG_DIR)
   }
-  fs.mkdirSync(DEPLOY_DIR)
+  fs.mkdirSync(PKG_DIR)
 }
 
 const copyFolderRecursiveSync = (source, target) => {
@@ -44,7 +47,8 @@ const copyFolderRecursiveSync = (source, target) => {
     if (
       excludeFiles.includes(file) ||
       excludeDirs.includes(file) ||
-      file === DEPLOY_DIR
+      file === PKG_DIR ||
+      regexp.test(file)
     ) {
       return
     }
@@ -60,29 +64,27 @@ const copyFolderRecursiveSync = (source, target) => {
 
 const copyDeployFiles = () => {
   const source = path.join(process.cwd())
-  const target = path.join(process.cwd(), DEPLOY_DIR)
+  const target = path.join(process.cwd(), PKG_DIR)
 
   copyFolderRecursiveSync(source, target)
 }
 
 const zipPackage = () => {
   const output = fs.createWriteStream(
-    path.join(process.cwd(), `${DEPLOY_DIR}/${DEPLOY_DIR}.zip`)
+    path.join(process.cwd(), `${PKG_DIR}/${PKG_DIR}.zip`)
   )
   const archive = archiver('zip')
 
   archive.pipe(output)
-  archive.directory(`${DEPLOY_DIR}/`, DEPLOY_DIR)
+  archive.directory(`${PKG_DIR}/`, PKG_DIR)
   archive.finalize()
 }
 
 export const handler = () => {
   createDeployDir()
+  execSync('yarn resolve-scripts build --cloud')
+
   copyDeployFiles()
-
-  const target = path.join(process.cwd(), DEPLOY_DIR)
-  execSync(`npx babel ${target} --out-dir ${target}`)
-
   zipPackage()
 }
 

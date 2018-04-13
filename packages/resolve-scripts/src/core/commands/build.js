@@ -1,10 +1,14 @@
 import webpack from '../webpack'
 import table from '../table'
+import path from 'path'
+import { execSync } from 'child_process'
 
 const env = require('../../../configs/env.list.json')
 const commands = require('../../../configs/command.list.json')
 const cli = require('../../../configs/cli.list.json')
 Object.keys(cli).forEach(key => (cli[key].default = undefined))
+
+const PKG_DIR = '.package'
 
 export const command = 'build'
 export const desc = commands.build
@@ -50,12 +54,19 @@ export const builder = yargs =>
     .option('print-config', cli.printConfig)
     .option('root-path', cli.rootPath)
     .option('open-browser', cli.openBrowser)
+    .option('cloud', cli.cloud)
     .implies('host', 'start')
     .implies('port', 'start')
     .implies('inspect', 'start')
 
-export const handler = argv =>
+export const handler = argv => {
+  if (argv.cloud) {
+    const target = path.join(process.cwd(), PKG_DIR)
+    return execSync(`npx babel ./common --out-dir ${target}/common`)
+  }
+
   webpack(argv, {
     NODE_ENV: 'production',
     BUILD: 'true'
   })
+}
